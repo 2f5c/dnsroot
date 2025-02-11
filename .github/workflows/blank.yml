@@ -23,7 +23,7 @@ jobs:
           echo "Last-Modified: $last_modified"
           echo "::set-output name=last_modified::$last_modified"
       
-      # Check if the file has been modified
+      # Check if the file has changed
       - name: Check if file has changed
         id: file_check
         run: |
@@ -48,11 +48,11 @@ jobs:
       - name: Download file and commit if changed
         if: steps.file_check.outputs.file_changed == 'true'
         run: |
-          curl -L "https://www.internic.net/domain/root.zone"
+          curl -L -o root.zone "https://www.internic.net/domain/root.zone"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add root.zone last_modified.txt
-          git commit -m "Add updated file"
+          git commit -m "Add updated root.zone file"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
