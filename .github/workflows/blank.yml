@@ -9,7 +9,8 @@ on:
 jobs:
   fetch_and_commit:
     runs-on: ubuntu-latest
-
+    outputs:
+      output1: ${{ steps.file_check.outputs.test }}
     steps:
       # Checkout the repository
       - name: Checkout repository
@@ -34,15 +35,15 @@ jobs:
             if [[ "$stored_last_modified" != "${{ steps.get_last_modified.outputs.last_modified }}" ]]; then
               echo "File has changed. Proceeding with download."
               echo "${{ steps.get_last_modified.outputs.last_modified }}" > last_modified.txt
-              echo "true" > file_changed.txt
+              echo "test=true" >> "$GITHUB_OUTPUT"
             else
               echo "File has not changed. Skipping commit."
-              echo "false" > file_changed.txt
+              echo "test=false" >> "$GITHUB_OUTPUT"
             fi
           else
             echo "last_modified.txt not found. Fetching file for the first time."
             echo "${{ steps.get_last_modified.outputs.last_modified }}" > last_modified.txt
-            echo "true" > file_changed.txt
+            echo "test=true" >> "$GITHUB_OUTPUT"
           fi  # This closes the 'if' block that checks for the existence of last_modified.txt
 
       # Download the file and commit if changed
