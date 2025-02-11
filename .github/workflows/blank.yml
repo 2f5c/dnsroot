@@ -43,6 +43,7 @@ jobs:
             echo "last_modified.txt not found. Fetching file for the first time."
             echo "${{ steps.get_last_modified.outputs.last_modified }}" > last_modified.txt
             echo "true" > file_changed.txt
+          fi  # This closes the 'if' block that checks for the existence of last_modified.txt
 
       # Download the file and commit if changed
       - name: Download file and commit if changed
