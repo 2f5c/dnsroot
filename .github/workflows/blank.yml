@@ -48,7 +48,7 @@ jobs:
 
       # Download the file and commit if changed
       - name: Download file and commit if changed
-        if: steps.file_check.outputs.file_changed == 'true'
+        if: steps.file_check.outputs.test == 'true'
         run: |
           curl -L -o root.zone "https://www.internic.net/domain/root.zone"
           git config user.name "github-actions[bot]"
