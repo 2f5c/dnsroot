@@ -1,0 +1,58 @@
+name: Fetch and Commit File
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual triggering of the workflow
+
+jobs:
+  fetch_and_commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Fetch Last-Modified header from the URL
+      - name: Get Last-Modified header from URL
+        id: get_last_modified
+        run: |
+          last_modified=$(curl -sI "https://www.internic.net/domain/root.zone" | grep -i 'Last-Modified' | sed 's/Last-Modified: //I')
+          echo "Last-Modified: $last_modified"
+          echo "::set-output name=last_modified::$last_modified"
+      
+      # Check if the file has been modified
+      - name: Check if file has changed
+        id: file_check
+        run: |
+          if [[ -f "last_modified.txt" ]]; then
+            stored_last_modified=$(cat last_modified.txt)
+            echo "Stored Last-Modified: $stored_last_modified"
+            echo "Current Last-Modified: ${{ steps.get_last_modified.outputs.last_modified }}"
+            if [[ "$stored_last_modified" != "${{ steps.get_last_modified.outputs.last_modified }}" ]]; then
+              echo "File has changed. Proceeding with download."
+              echo "${{ steps.get_last_modified.outputs.last_modified }}" > last_modified.txt
+              echo "true" > file_changed.txt
+            else
+              echo "File has not changed. Skipping commit."
+              echo "false" > file_changed.txt
+            fi
+          else
+            echo "last_modified.txt not found. Fetching file for the first time."
+            echo "${{ steps.get_last_modified.outputs.last_modified }}" > last_modified.txt
+            echo "true" > file_changed.txt
+
+      # Download the file and commit if changed
+      - name: Download file and commit if changed
+        if: steps.file_check.outputs.file_changed == 'true'
+        run: |
+          curl -L "https://www.internic.net/domain/root.zone"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add root.zone last_modified.txt
+          git commit -m "Add updated file"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
